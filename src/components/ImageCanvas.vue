@@ -1,13 +1,22 @@
 <template>
   <div>
-    <img ref="sampleImage" :src="sampleImageSource" alt="sample">
-    <button @click="renderCanvas">Render</button>
-    <canvas ref="imageCanvas"></canvas>
-    <div v-if="topTenColors.length">
+    <input
+      style="display: none"
+      type="file"
+      @change="imageUploadHandler($event)" accept=".jpg"
+      ref="fileInput"
+    >
+    <button @click="$refs.fileInput.click()"> Pick File</button>
+    <button v-if="imagePreview" @click="renderCanvas">Render</button>
+    <div v-if="showPreview">
+      <img :src="imagePreview" ref="imagePreview" />
+    </div>
+    <canvas ref="imageCanvas" class="renderedCanvas"></canvas>
+    <div v-if="topTenColors.length" class="colorPalette__wrapper">
       <div
         v-for="(color, i) in topTenColors"
         :key="i"
-        class="colorBlock"
+        class="colorPalette__box"
         :style="boxColor(color)"
       >
       </div>
@@ -19,7 +28,9 @@
 export default {
   data () {
     return {
-      topTenColors: []
+      topTenColors: [],
+      showPreview: false,
+      imagePreview: '',
     }
   },
   methods: {
@@ -42,10 +53,22 @@ export default {
       let codeArr = code.split('.').map(x => parseInt(x))
       return [codeArr[0] * 16, codeArr[1] * 10, codeArr[2] * 10]
     },
+    imageUploadHandler (e) {
+      // this.file = this.$refs.fileInput.files[0]
+      let file = e.target.files[0]
+      let reader = new FileReader()
+
+      reader.addEventListener("load", function () {
+        this.showPreview = true
+        this.imagePreview = reader.result
+      }.bind(this), false)
+
+      reader.readAsDataURL( file )
+    },
     renderCanvas () {
       let canvas = this.$refs.imageCanvas
       let context = canvas.getContext('2d')
-      let image = this.$refs.sampleImage
+      let image = this.$refs.imagePreview
 
       canvas.width = image.width
       canvas.height = image.height
@@ -128,9 +151,20 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-  .colorBlock {
-    width: 100px;
-    height: 100px;
-  }
+.renderedCanvas {
+   display: none;
+}
+
+.colorPalette__wrapper {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.colorPalette__box {
+  width: 100px;
+  height: 100px;
+  color: red;
+}
+
 </style>
 
