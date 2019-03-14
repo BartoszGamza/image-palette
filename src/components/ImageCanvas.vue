@@ -54,7 +54,6 @@ export default {
       return [codeArr[0] * 16, codeArr[1] * 10, codeArr[2] * 10]
     },
     imageUploadHandler (e) {
-      // this.file = this.$refs.fileInput.files[0]
       let file = e.target.files[0]
       let reader = new FileReader()
 
