@@ -34,9 +34,58 @@ export default {
     }
   },
   methods: {
+
+    getPixelsCoordinates (pixel) {
+      const bucketSize = 255 / 3
+
+      const redAxis = Math.floor(pixel[0] / bucketSize)
+      const greenAxis = Math.floor(pixel[1] / bucketSize)
+      const blueAxis = Math.floor(pixel[2] / bucketSize)
+
+      return `${redAxis}:${greenAxis}:${blueAxis}:`
+    },
+
+    populateBlocksWithPixels (pixelArray) {
+      let blocksMap = {}
+      pixelArray.forEach(pixel => {
+        const pixelsBlock = this.getPixelsCoordinates(pixel)
+        if(blocksMap[pixelsBlock]) {
+          blocksMap[pixelsBlock].push(pixel)
+        } else {
+          blocksMap[pixelsBlock] = [pixel]
+        }
+      })
+      return blocksMap
+    },
+
+    sortBlocks (blocksMap) {
+      return Object.keys(blocksMap).sort((a, b) => { return blocksMap[b].length - blocksMap[a].length}).slice(0, 10)
+    },
+
+    getBlockColors (blocksMap, topTenBlocks) {
+      return topTenBlocks.map(block => {
+        return this.getAverageBlockColor(blocksMap[block])
+      })
+    },
+
+    getAverageBlockColor (block) {
+      let totalArray = [0, 0, 0]
+      block.forEach(pixel => {
+        for(let i = 0; i < 3; i++) {
+          totalArray[i]+=pixel[i]
+        }
+      })
+      return totalArray.map(color => Math.floor(color / block.length))
+    },
+
+    decodeRGB (pixel) {
+      return pixel.join(',')
+    },
+
+
     boxColor (color) {
       return {
-        backgroundColor: `hsl(${color})`
+        backgroundColor: `rgb(${color})`
       }
     },
     chunkArray (arr, size, offset) {
@@ -51,7 +100,7 @@ export default {
     },
     hslArray (code) {
       let codeArr = code.split('.').map(x => parseInt(x))
-      return [codeArr[0] * 16, codeArr[1] * 10, codeArr[2] * 10]
+      return [codeArr[0] * 8, codeArr[1] * 5, codeArr[2] * 5]
     },
     imageUploadHandler (e) {
       let file = e.target.files[0]
@@ -81,16 +130,17 @@ export default {
       // r g b a , where a is 0-255 its 0 to 1 in original
 
       const chunkedArray = this.chunkArray(imageData.data, 4, 1)
-      const firstPixel = chunkedArray[0]
-      const firstPixelHsv = this.rgbToHsv(firstPixel)
-      // console.log(firstPixel, firstPixelHsv)
 
       const normalizedHsvArray = chunkedArray.map(arr => this.rgbToHsv(arr))
-      // console.log(normalizedHsvArray)
       const topTen = this.mostOccurencies(normalizedHsvArray)
 
-      const colors = topTen.map(c => this.hslArray(c)).map(a => this.decodeColor(a))
-      this.topTenColors = colors
+      // const colors = topTen.map(c => this.hslArray(c)).map(a => this.decodeColor(a))
+      // this.topTenColors = colors
+
+      let blocks = this.populateBlocksWithPixels(chunkedArray)
+      let topTenBlocks = this.sortBlocks(blocks)
+
+      this.topTenColors = this.getBlockColors(blocks, topTenBlocks).map(c => this.decodeRGB(c))
 
       // https://stackoverflow.com/questions/1106190/algorithm-challenge-generate-color-scheme-from-an-image
     },
@@ -138,7 +188,7 @@ export default {
     },
     normalizeHsv ([h, s, v]) {
       // reduce number of *slightly* different colors
-      return [Math.round(h / 16), Math.round(s / 10), Math.round(v / 10)]
+      return [Math.round(h / 8), Math.round(s / 5), Math.round(v / 5)]
     }
   },
   computed: {
