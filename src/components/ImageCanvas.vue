@@ -3,7 +3,7 @@
     <input
       style="display: none"
       type="file"
-      @change="imageUploadHandler($event)" accept=".jpg"
+      @change="imageUploadHandler($event)" accept="image/*"
       ref="fileInput"
     >
     <button @click="$refs.fileInput.click()"> Pick File</button>
@@ -18,6 +18,7 @@
         :key="i"
         class="colorPalette__box"
         :style="boxColor(color)"
+        @click="copyColorHandler(color)"
       >
       {{ color }}
       </div>
@@ -42,6 +43,17 @@ export default {
       return {
         backgroundColor: color
       }
+    },
+    copyColorHandler (color) {
+      const el = document.createElement('textarea')
+      el.value = color
+      el.setAttribute('readonly', '')
+      el.style.position = 'absolute'
+      el.style.left = '-9999px'
+      document.body.appendChild(el)
+      el.select()
+      document.execCommand('copy')
+      document.body.removeChild(el)
     },
     decodeRGB (pixel) {
       return pixel.join(',')
