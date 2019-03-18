@@ -19,6 +19,7 @@
         class="colorPalette__box"
         :style="boxColor(color)"
       >
+      {{ color }}
       </div>
     </div>
   </div>
@@ -26,7 +27,7 @@
 
 <script>
 import topColorsByHistogram from '@/lib/Histogram'
-import { chunkArray } from '@/lib/Helpers'
+import { chunkArray, RGBtoHex } from '@/lib/Helpers'
 
 export default {
   data () {
@@ -39,7 +40,7 @@ export default {
   methods: {
     boxColor (color) {
       return {
-        backgroundColor: `rgb(${color})`
+        backgroundColor: color
       }
     },
     decodeRGB (pixel) {
@@ -75,7 +76,7 @@ export default {
         nTop: 10
       })
 
-      this.topTenColors = histogramBlocks.map(c => this.decodeRGB(c))
+      this.topTenColors = histogramBlocks.map(c => RGBtoHex(c))
     }
   },
   computed: {
